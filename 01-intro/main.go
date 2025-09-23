@@ -169,7 +169,7 @@ func main() {
 		fmt.Println("Eres un administrador, puedes hacer de todo en la aplicación.")
 	case "PREMIUM":
 		fmt.Println("Eres un usuario de pago, puedes hacer operaciones de lectura y escritura en la aplicación.")
-	case "FREE":
+	case "FREE", "FREEMIUM":
 		fmt.Println("Eres un usuario que no paga, solo puedes ver los datos en la aplicación.")
 	default:
 		fmt.Println("No tienes un rol asignado.")
@@ -185,6 +185,11 @@ func main() {
 			break
 		}
 		fmt.Println(i)
+	}
+
+	j := 0
+	for j < 4 {
+		j++
 	}
 
 }
