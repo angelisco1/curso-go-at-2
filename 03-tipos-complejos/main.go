@@ -6,6 +6,17 @@ import (
 	"slices"
 )
 
+func Shift(datos []int) ([]int, error) {
+	if len(datos) == 0 {
+		return nil, fmt.Errorf("no se puede aplicar esta operación a un slice vacío")
+	}
+	return datos[1:], nil
+}
+
+func Unshift(datos []int, elem int) []int {
+	return append([]int{elem}, datos...)
+}
+
 func main() {
 	// Arrays: tienen un tamaño fijo
 
@@ -131,5 +142,13 @@ func main() {
 	// EJERCICIO: crear las funciones shift y unshift
 	// shift([1, 2, 3, 4]) -> retorna [2, 3, 4]
 	// unshift([2, 3, 4], 1) -> retorna [1, 2, 3, 4]
+	fmt.Println(Shift([]int{1, 2, 3, 4}))
+	fmt.Println(Unshift([]int{1, 2, 3, 4}, 0))
 
+	subSlice, err := Shift([]int{})
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(subSlice)
+	}
 }
