@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 )
 
@@ -46,6 +47,77 @@ func MapIntStr(nums []int, operacion OperacionFunc2) []string {
 	return numerosTransformados
 }
 
+// Reflection API - filter generico
+
+func Filter(lista interface{}, fn interface{}) interface{} {
+
+	tipoLista := reflect.TypeOf(lista)
+	tipoFn := reflect.TypeOf(fn)
+
+	fmt.Println(tipoLista.Kind())
+	fmt.Println(tipoFn.Kind())
+
+	if tipoLista.Kind() != reflect.Slice {
+		panic("debería de ser un slice")
+	}
+
+	if tipoFn.Kind() != reflect.Func {
+		panic("debería de ser una función")
+	}
+
+	valorLista := reflect.ValueOf(lista)
+	valorFn := reflect.ValueOf(fn)
+
+	listaFiltrados := reflect.MakeSlice(tipoLista, 0, valorLista.Len())
+
+	for i := 0; i < valorLista.Len(); i++ {
+		item := valorLista.Index(i)
+		resultadoSlice := valorFn.Call([]reflect.Value{item})
+		resultado := resultadoSlice[0].Bool()
+		if resultado {
+			listaFiltrados = reflect.Append(listaFiltrados, item)
+		}
+	}
+
+	return listaFiltrados
+}
+
+// Closures
+
+func Contador() func() int {
+
+	cuenta := 0
+
+	return func() int {
+		cuenta++
+		return cuenta
+	}
+}
+
+func accederPorRol(rol string) func(recurso string) bool {
+	return func(recurso string) bool {
+		if recurso == "/admin" && rol == "ADMIN" {
+			return true
+		}
+
+		if recurso == "/facturas" && (rol == "PREMIUM" || rol == "ADMIN") {
+			return true
+		}
+
+		if recurso == "/home" {
+			return true
+		}
+
+		return false
+	}
+}
+
+func crearValidador(longitudCampo int) func(valorCampo string) bool {
+	return func(valorCampo string) bool {
+		return len(valorCampo) >= longitudCampo
+	}
+}
+
 func main() {
 
 	dobleNums := Map([]int{1, 2, 3, 4, 5}, func(n int) int {
@@ -84,5 +156,56 @@ func main() {
 
 	fmt.Println(realizarOperacion(1, 2, sumar))
 	fmt.Println(realizarOperacion(1, 2, restar))
+
+	contador1 := Contador()
+
+	fmt.Println(contador1())
+	fmt.Println(contador1())
+	fmt.Println(contador1())
+	fmt.Println(contador1())
+
+	accesoAdmin := accederPorRol("ADMIN")
+	accesoFree := accederPorRol("FREE")
+
+	fmt.Println(accesoAdmin("/home"))
+	fmt.Println(accesoAdmin("/admin"))
+
+	fmt.Println(accesoFree("/home"))
+	fmt.Println(accesoFree("/admin"))
+
+	validarContrasenya := crearValidador(8)
+	validarNombre := crearValidador(3)
+
+	fmt.Println(validarContrasenya("qwerty"))
+	fmt.Println(validarContrasenya("qwerty12345"))
+	fmt.Println(validarNombre("Aa"))
+	fmt.Println(validarNombre("Aaaa"))
+
+	// Reflection API
+
+	var mensaje interface{}
+	mensaje = "Un string"
+
+	tipo := reflect.TypeOf(mensaje)
+	valor := reflect.ValueOf(mensaje)
+	fmt.Println("----")
+	fmt.Println(tipo)
+	fmt.Println(valor)
+
+	unNumero := 2
+	tipoUnNumero := reflect.TypeOf(unNumero)
+	fmt.Println(tipoUnNumero)
+	valorUnNumero := reflect.ValueOf(unNumero)
+	fmt.Println(valorUnNumero)
+
+	r := Filter([]string{"a", "b", "a", "c"}, func(item string) bool {
+		return item == "a"
+	})
+	fmt.Println(r)
+
+	r = Filter([]int{1, 2, 3, 4}, func(item int) bool {
+		return item > 2
+	})
+	fmt.Println(r)
 
 }
