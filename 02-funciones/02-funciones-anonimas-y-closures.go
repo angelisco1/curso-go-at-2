@@ -68,6 +68,8 @@ func Filter(lista interface{}, fn interface{}) interface{} {
 	valorLista := reflect.ValueOf(lista)
 	valorFn := reflect.ValueOf(fn)
 
+	fmt.Println("->", valorLista)
+
 	listaFiltrados := reflect.MakeSlice(tipoLista, 0, valorLista.Len())
 
 	for i := 0; i < valorLista.Len(); i++ {
@@ -80,6 +82,23 @@ func Filter(lista interface{}, fn interface{}) interface{} {
 	}
 
 	return listaFiltrados
+}
+
+type Persona struct {
+	Nombre string
+	Edad   uint
+}
+
+func FilterConGenericos[T any](lista []T, fn func(T) bool) []T {
+	elementosFiltrados := []T{}
+
+	for _, item := range lista {
+		if fn(item) {
+			elementosFiltrados = append(elementosFiltrados, item)
+		}
+	}
+
+	return elementosFiltrados
 }
 
 // Closures
@@ -205,6 +224,21 @@ func main() {
 
 	r = Filter([]int{1, 2, 3, 4}, func(item int) bool {
 		return item > 2
+	})
+	fmt.Println(r)
+
+	r = FilterConGenericos([]int{1, 2, 3, 4}, func(item int) bool {
+		return item > 2
+	})
+	fmt.Println(r)
+
+	r = FilterConGenericos([]Persona{
+		Persona{"Charly", 48},
+		Persona{"Mike", 53},
+		Persona{"Sarah", 50},
+		Persona{"Faustina", 46},
+	}, func(item Persona) bool {
+		return item.Edad >= 50
 	})
 	fmt.Println(r)
 
