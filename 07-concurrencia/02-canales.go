@@ -7,6 +7,30 @@ import (
 	"time"
 )
 
+type Paso struct {
+	Descripcion string
+	Duracion    time.Duration
+}
+
+type Receta struct {
+	Nombre string
+	Pasos  []Paso
+}
+
+func (r *Receta) cocinarReceta(progreso chan string, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	numPasos := len(r.Pasos)
+	for i, paso := range r.Pasos {
+		time.Sleep(paso.Duracion)
+		progreso <- fmt.Sprintf("[%s - %d/%d]: %s", r.Nombre, i+1, numPasos, paso.Descripcion)
+	}
+
+	close(progreso)
+
+	// Podría haber más cosas por aquí
+}
+
 func realizarTareas(tareas []string, canal chan string, wc *sync.WaitGroup) {
 	defer wc.Done()
 
@@ -168,5 +192,81 @@ func main() {
 	// Paso -> Duracion, Descripcion
 	// Método hacerReceta -> iterar los pasos y va a ir avisando por un canal el progreso
 	// Al finalizar las 2 recetas, avisar que ya pueden llevarlas a la mesa
+	recetaTortillaDePatatas := Receta{
+		Nombre: "Tortilla de patatas",
+		Pasos: []Paso{
+			Paso{
+				Descripcion: "Cortar patatas",
+				Duracion:    2 * time.Second,
+			},
+			Paso{
+				Descripcion: "Freir las patatas",
+				Duracion:    4 * time.Second,
+			},
+			Paso{
+				Descripcion: "Escurrir las patatas",
+				Duracion:    1 * time.Second,
+			},
+			Paso{
+				Descripcion: "Echar el huevo",
+				Duracion:    1 * time.Second,
+			},
+			Paso{
+				Descripcion: "Hacer la tortilla",
+				Duracion:    5 * time.Second,
+			},
+		},
+	}
+
+	recetaTortillaFrancesa := Receta{
+		Nombre: "Tortilla francesa",
+		Pasos: []Paso{
+			Paso{
+				Descripcion: "Batir los huevos",
+				Duracion:    1 * time.Second,
+			},
+			Paso{
+				Descripcion: "Hacer la tortilla",
+				Duracion:    5 * time.Second,
+			},
+		},
+	}
+
+	var wgRecetas sync.WaitGroup
+	wgRecetas.Add(2)
+
+	progresoTortillaDePatatas := make(chan string)
+	progresoTortillaFrancesa := make(chan string)
+
+	go recetaTortillaDePatatas.cocinarReceta(progresoTortillaDePatatas, &wgRecetas)
+	go recetaTortillaFrancesa.cocinarReceta(progresoTortillaFrancesa, &wgRecetas)
+
+	receta1Hecha := false
+	receta2Hecha := false
+
+	for !receta1Hecha || !receta2Hecha {
+		select {
+		case paso, ok := <-progresoTortillaDePatatas:
+			if ok {
+				fmt.Println(paso)
+			} else {
+				fmt.Println("Receta de tortilla de patatas terminada")
+				receta1Hecha = true
+				progresoTortillaDePatatas = nil
+			}
+		case paso, ok := <-progresoTortillaFrancesa:
+			if ok {
+				fmt.Println(paso)
+			} else {
+				fmt.Println("Receta de tortilla francesa terminada")
+				receta2Hecha = true
+				progresoTortillaFrancesa = nil
+			}
+		}
+	}
+
+	wgRecetas.Wait()
+
+	fmt.Println("Ya hemos terminado en la cocina por hoy...")
 
 }
