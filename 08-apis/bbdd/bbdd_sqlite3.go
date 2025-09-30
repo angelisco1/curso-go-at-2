@@ -11,7 +11,8 @@ import (
 var BBDD *sql.DB
 
 func ConectarBBDD() {
-	BBDD, err := sql.Open("sqlite3", "./bbdd.db")
+	var err error
+	BBDD, err = sql.Open("sqlite3", "./bbdd.db")
 	if err != nil {
 		log.Fatalf("Error al conectarnos a la BBDD: %v", err)
 	}
